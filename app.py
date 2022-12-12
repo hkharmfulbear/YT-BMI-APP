@@ -1,44 +1,68 @@
 import streamlit as st 
 from PIL import Image
+import pandas as pd
+from utils import *
 
+df = pd.read_csv("weight_list.csv", index_col=0)
 
-st.title("This is My BMI Calculator")
+st.title("wrokout log")
 
-img = Image.open("bmi.jpg")
-st.image(img)
+# img = Image.open("bmi.jpg")
+# st.image(img)
 
 # Introduction
 
-st.subheader("Introduction")
-
-st.text("""
-BMI is a person’s weight in kilograms divided by the square of height in meters. 
-A high BMI can indicate high body fatness.
-
-If your BMI is less than 18.5, it falls within the underweight range.
-If your BMI is 18.5 to <25, it falls within the healthy weight range.
-If your BMI is 25.0 to <30, it falls within the overweight range.
-If your BMI is 30.0 or higher, it falls within the obesity range.
-
-Obesity is frequently subdivided into categories:
-
-Class 1: BMI of 30 to < 35
-Class 2: BMI of 35 to < 40
-Class 3: BMI of 40 or higher. 
-Class 3 obesity is sometimes categorized as “severe” obesity.
-
-Credits: https://www.cdc.gov/obesity/adult/defining.html
-
-	""")
-
+st.subheader("登録画面")
 
 # Input
+date = st.date_input("日付")
 
-weight = st.number_input("Enter your Weight in KG", step = 0.1)
+syumoku = st.selectbox("メニュー", pd.DataFrame(["ベンチプレス", "スクワット"]))
 
-height = st.number_input("Enter your Height in Meters")
+weight = st.number_input("重量", step = 1, format="%d")
+
+rep = st.number_input("回数", step = 1, format="%d")
+
+set = st.selectbox("セット番号", pd.DataFrame(["1セット目", "2セット目", "3セット目"]))
 
 
-bmi = weight/(height)**2
 
-st.success(f"Your BMI is {bmi}")
+rm = weight*rep/40 + weight
+
+
+
+
+st.button("保存", key=None, help=None, on_click=onClickSave, args=(df, date, syumoku, weight, rep, set, rm),)
+
+st.success(f"あなたの最大挙上重量は {rm}kgです。{round(rm *0.80)}kgで8回挙上することで筋力アップが見込めます")
+
+
+# Introduction
+
+st.subheader("可視化画面")
+
+# 都道府県選択セレクトボックス
+option = st.selectbox(
+    '種目',
+    pd.DataFrame(["ベンチプレス", "スクワット"]))
+
+# 選択した都道府県データを抽出
+df_syumoku = df[df['syumoku'] == option]
+groups = df_syumoku.groupby("date")
+date_list = []
+rm_list = []
+weight_sum_list = []
+for name, group in groups:
+	date_list.append(group.date.iloc[0])
+	rm_list.append(group.rm.max())
+	weight_sum_list.append(group.weight.sum())
+rm_max_df = pd.DataFrame({"date": date_list, "rm": rm_list, "weight_sum": weight_sum_list})
+
+st.bar_chart(data=rm_max_df, x="date", y="rm")
+st.line_chart(data=rm_max_df, x="date", y="weight_sum")
+
+# Table
+
+st.subheader("table")
+st.table(df)
+
