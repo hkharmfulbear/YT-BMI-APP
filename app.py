@@ -17,7 +17,7 @@ st.subheader("登録画面")
 # Input
 date = st.date_input("日付")
 
-syumoku = st.selectbox("メニュー", pd.DataFrame(["ベンチプレス", "スクワット"]))
+syumoku = st.text_input("メニュー")
 
 weight = st.number_input("重量", step = 1, format="%d")
 
